@@ -14,7 +14,6 @@
       <h1>Célula Raízes</h1>
       <div class="subtitle">Projeto Casa 91</div>
     </header>
-
     <nav class="nav">
       <a href="index.html" class="active">Dashboard</a>
       <a href="formulario.html">Jejum 21 Dias</a>
@@ -32,9 +31,7 @@
       <section class="cards-grid" id="cards"></section>
 
       <div class="cta-box">
-        <a href="formulario.html" class="btn btn-primary">
-          Lançar Tempo de Oração
-        </a>
+        <a href="formulario.html" class="btn btn-primary">Lançar Tempo de Oração</a>
       </div>
 
       <section class="form-section">
@@ -54,25 +51,24 @@
     <div id="error" class="alert alert-error hidden"></div>
   </main>
 
-  <footer class="footer">
-    Célula Raízes • Igreja Videira de Ourinhos
-  </footer>
+  <footer class="footer">Célula Raízes • Igreja Videira de Ourinhos</footer>
 
+  <script type="module">
+    import * as FB from "./js/firebase.js";
+    window.FB = FB;
+  </script>
   <script src="js/app.js"></script>
-  <script>
+  <script type="module">
     async function carregarDashboard() {
-      const loading = document.getElementById('loading');
-      const content = document.getElementById('content');
-      const errorEl = document.getElementById('error');
+      const loading = document.getElementById("loading");
+      const content = document.getElementById("content");
+      const errorEl = document.getElementById("error");
 
       try {
         const [alvosRes, rankingRes] = await Promise.all([
-          apiGet('getAlvos'),
-          apiGet('getRanking')
+          window.FB.getAlvos(),
+          window.FB.getRanking()
         ]);
-
-        if (alvosRes.error) throw new Error(alvosRes.error);
-        if (rankingRes.error) throw new Error(rankingRes.error);
 
         const alvos = alvosRes.alvos || {};
         const ranking = rankingRes.ranking || [];
@@ -84,76 +80,56 @@
         const batismosMeta = Number(alvos.BatismosMeta) || 3;
         const batismosAtual = Number(alvos.BatismosAtual) || 0;
 
-        const pctHoras = Math.min(100, Math.round((horasAtual / horasMeta) * 100));
-        const pctVisitas = Math.min(100, Math.round((visitasAtual / visitasMeta) * 100));
-        const pctBatismos = Math.min(100, Math.round((batismosAtual / batismosMeta) * 100));
+        const pct = (a, m) => Math.min(100, Math.round((a / m) * 100));
+        const cls = p => p >= 80 ? "" : p >= 40 ? "warning" : "danger";
 
-        function progressClass(pct) {
-          if (pct >= 80) return '';
-          if (pct >= 40) return 'warning';
-          return 'danger';
-        }
-
-        document.getElementById('cards').innerHTML = `
+        document.getElementById("cards").innerHTML = `
           <div class="card">
             <div class="card-title">Horas de Oração</div>
             <div class="card-value">${horasAtual} <small style="font-size:0.9rem;font-weight:500;">/ ${horasMeta}h</small></div>
-            <div class="progress-bar">
-              <div class="progress-fill ${progressClass(pctHoras)}" style="width:${pctHoras}%"></div>
-            </div>
-            <div class="card-meta">${pctHoras}% do alvo</div>
+            <div class="progress-bar"><div class="progress-fill ${cls(pct(horasAtual,horasMeta))}" style="width:${pct(horasAtual,horasMeta)}%"></div></div>
+            <div class="card-meta">${pct(horasAtual,horasMeta)}% do alvo</div>
           </div>
-
           <div class="card">
             <div class="card-title">Visitas (Casas)</div>
             <div class="card-value">${visitasAtual} <small style="font-size:0.9rem;font-weight:500;">/ ${visitasMeta}</small></div>
-            <div class="progress-bar">
-              <div class="progress-fill ${progressClass(pctVisitas)}" style="width:${pctVisitas}%"></div>
-            </div>
-            <div class="card-meta">${pctVisitas}% do alvo</div>
+            <div class="progress-bar"><div class="progress-fill ${cls(pct(visitasAtual,visitasMeta))}" style="width:${pct(visitasAtual,visitasMeta)}%"></div></div>
+            <div class="card-meta">${pct(visitasAtual,visitasMeta)}% do alvo</div>
           </div>
-
           <div class="card">
             <div class="card-title">Batismo</div>
             <div class="card-value">${batismosAtual} <small style="font-size:0.9rem;font-weight:500;">/ ${batismosMeta}</small></div>
-            <div class="progress-bar">
-              <div class="progress-fill ${progressClass(pctBatismos)}" style="width:${pctBatismos}%"></div>
-            </div>
-            <div class="card-meta">${pctBatismos}% do alvo</div>
+            <div class="progress-bar"><div class="progress-fill ${cls(pct(batismosAtual,batismosMeta))}" style="width:${pct(batismosAtual,batismosMeta)}%"></div></div>
+            <div class="card-meta">${pct(batismosAtual,batismosMeta)}% do alvo</div>
           </div>
-
           <div class="card">
             <div class="card-title">Conversão / Vidas</div>
-            <div class="card-value" style="font-size:1.25rem;">${alvos.Conversao || '5 por Membro'}</div>
+            <div class="card-value" style="font-size:1.25rem;">${alvos.Conversao || "5 por Membro"}</div>
             <div class="card-meta">Lembrete para os irmãos</div>
           </div>
         `;
 
-        document.getElementById('totalHoras').textContent = horasAtual + ' h';
+        document.getElementById("totalHoras").textContent = horasAtual + " h";
 
-        const list = document.getElementById('rankingList');
-        if (ranking.length === 0) {
-          list.innerHTML = '<li class="text-center" style="color:var(--text-muted);padding:1rem;">Nenhum registro ainda</li>';
-        } else {
-          list.innerHTML = ranking.map((r, i) => `
+        const list = document.getElementById("rankingList");
+        list.innerHTML = ranking.length === 0
+          ? '<li class="text-center" style="color:var(--text-muted);padding:1rem;">Nenhum registro ainda</li>'
+          : ranking.map((r, i) => `
             <li class="ranking-item">
               <span class="ranking-pos">${i + 1}º</span>
               <span class="ranking-name">${r.nome}</span>
               <span class="ranking-hours">${r.horas} h</span>
-            </li>
-          `).join('');
-        }
+            </li>`).join("");
 
-        loading.classList.add('hidden');
-        content.classList.remove('hidden');
+        loading.classList.add("hidden");
+        content.classList.remove("hidden");
       } catch (err) {
-        loading.classList.add('hidden');
-        errorEl.textContent = err.message || 'Erro ao carregar dados.';
-        errorEl.classList.remove('hidden');
+        loading.classList.add("hidden");
+        errorEl.textContent = err.message || "Erro ao carregar dados.";
+        errorEl.classList.remove("hidden");
         console.error(err);
       }
     }
-
     carregarDashboard();
   </script>
 </body>
