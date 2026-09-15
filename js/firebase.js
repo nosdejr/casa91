@@ -15,6 +15,13 @@ import {
   updateDoc
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
 const firebaseConfig = {
   apiKey: "AIzaSyC7uF7LInToJE5T8kn8LlYlI38reXmwi-Y",
   authDomain: "casa91raizes.firebaseapp.com",
@@ -27,6 +34,24 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
+
+// ========== AUTENTICAÇÃO ==========
+export function login(email, password) {
+  return signInWithEmailAndPassword(auth, email, password);
+}
+
+export function logout() {
+  return signOut(auth);
+}
+
+export function onAuthChange(callback) {
+  return onAuthStateChanged(auth, callback);
+}
+
+export function getCurrentUser() {
+  return auth.currentUser;
+}
 
 // ========== LEITURA ==========
 export async function getMembros() {
