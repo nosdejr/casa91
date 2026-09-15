@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <meta name="theme-color" content="#1e40af">
-  <title>Célula Raízes • Projeto Casa 91</title>
+  <title>Admin | Célula Raízes</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -15,27 +15,95 @@
       <div class="subtitle">Projeto Casa 91</div>
     </header>
     <nav class="nav">
-      <a href="index.html" class="active">Dashboard</a>
+      <a href="index.html">Dashboard</a>
       <a href="formulario.html">Jejum 21 Dias</a>
-      <a href="admin.html">Admin</a>
+      <a href="admin.html" class="active">Admin</a>
     </nav>
   </div>
 
   <main class="container">
-    <div id="loading" class="loading">
-      <div class="spinner"></div>
-      <p>Carregando dados...</p>
-    </div>
-
-    <div id="content" class="hidden">
-      <section class="cards-grid" id="cards"></section>
-
-      <div class="cta-box">
-        <a href="formulario.html" class="btn btn-primary">Lançar Tempo de Oração</a>
+    <div id="loginBox" class="admin-login form-section">
+      <h2>Acesso Administrativo</h2>
+      <div class="form-group">
+        <label for="senha">Senha</label>
+        <input type="password" id="senha" placeholder="Digite a senha">
       </div>
+      <button class="btn btn-primary" onclick="fazerLogin()">Entrar</button>
     </div>
 
-    <div id="error" class="alert alert-error hidden"></div>
+    <div id="adminContent" class="hidden">
+
+      <!-- Alvos -->
+      <section class="form-section admin-section">
+        <h3>Alvos / Progresso</h3>
+        <div class="form-group">
+          <label>Visitas Atuais</label>
+          <input type="number" id="visitasAtual" min="0">
+        </div>
+        <div class="form-group">
+          <label>Batismos Atuais</label>
+          <input type="number" id="batismosAtual" min="0">
+        </div>
+        <button class="btn btn-primary" onclick="salvarAlvos()">Salvar Alvos</button>
+      </section>
+
+      <!-- Membros -->
+      <section class="form-section admin-section">
+        <h3>
+          Membros
+          <button class="btn btn-success" style="width:auto;padding:0.4rem 0.8rem;font-size:0.85rem;" onclick="mostrarAddMembro()">+ Adicionar</button>
+        </h3>
+
+        <div id="addMembroBox" class="hidden mb-2">
+          <div class="form-group">
+            <input type="text" id="novoMembro" placeholder="Nome do irmão">
+          </div>
+          <button class="btn btn-success" onclick="adicionarMembro()">Salvar Nome</button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Membros</th>
+                <th style="width:140px;">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="listaMembros"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Registros -->
+      <section class="form-section admin-section">
+        <h3>Registros de Oração</h3>
+        <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.75rem;text-align:center;">
+          Use Editar para corrigir minutos ou Excluir para remover.
+        </p>
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Data</th>
+                <th>Dia</th>
+                <th>Min</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tabelaRegistros"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Ranking (só no admin) -->
+      <section class="form-section admin-section">
+        <h3>Ranking Completo</h3>
+        <ul class="ranking-list" id="rankingAdmin"></ul>
+      </section>
+
+      <button class="btn btn-danger" style="width:100%;margin-top:1rem;" onclick="sair()">Sair</button>
+    </div>
   </main>
 
   <footer class="footer">Célula Raízes • Igreja Videira de Ourinhos</footer>
@@ -46,61 +114,193 @@
   </script>
   <script src="js/app.js"></script>
   <script type="module">
-    async function carregarDashboard() {
-      const loading = document.getElementById("loading");
-      const content = document.getElementById("content");
-      const errorEl = document.getElementById("error");
-
-      try {
-        const alvosRes = await window.FB.getAlvos();
-        const alvos = alvosRes.alvos || {};
-
-        const horasMeta = Number(alvos.HorasMeta) || 158;
-        const horasAtual = Number(alvos.HorasAtual) || 0;
-        const visitasMeta = Number(alvos.VisitasMeta) || 3;
-        const visitasAtual = Number(alvos.VisitasAtual) || 0;
-        const batismosMeta = Number(alvos.BatismosMeta) || 3;
-        const batismosAtual = Number(alvos.BatismosAtual) || 0;
-
-        const pct = (a, m) => Math.min(100, Math.round((a / m) * 100));
-        const cls = p => p >= 80 ? "" : p >= 40 ? "warning" : "danger";
-
-        document.getElementById("cards").innerHTML = `
-          <div class="card">
-            <div class="card-title">Horas de Oração</div>
-            <div class="card-value">${horasAtual} <small style="font-size:0.9rem;font-weight:500;">/ ${horasMeta}h</small></div>
-            <div class="progress-bar"><div class="progress-fill ${cls(pct(horasAtual,horasMeta))}" style="width:${pct(horasAtual,horasMeta)}%"></div></div>
-            <div class="card-meta">${pct(horasAtual,horasMeta)}% do alvo</div>
-          </div>
-          <div class="card">
-            <div class="card-title">Visitas (Casas)</div>
-            <div class="card-value">${visitasAtual} <small style="font-size:0.9rem;font-weight:500;">/ ${visitasMeta}</small></div>
-            <div class="progress-bar"><div class="progress-fill ${cls(pct(visitasAtual,visitasMeta))}" style="width:${pct(visitasAtual,visitasMeta)}%"></div></div>
-            <div class="card-meta">${pct(visitasAtual,visitasMeta)}% do alvo</div>
-          </div>
-          <div class="card">
-            <div class="card-title">Batismo</div>
-            <div class="card-value">${batismosAtual} <small style="font-size:0.9rem;font-weight:500;">/ ${batismosMeta}</small></div>
-            <div class="progress-bar"><div class="progress-fill ${cls(pct(batismosAtual,batismosMeta))}" style="width:${pct(batismosAtual,batismosMeta)}%"></div></div>
-            <div class="card-meta">${pct(batismosAtual,batismosMeta)}% do alvo</div>
-          </div>
-          <div class="card">
-            <div class="card-title">Conversão / Vidas</div>
-            <div class="card-value" style="font-size:1.25rem;">${alvos.Conversao || "5 por Membro"}</div>
-            <div class="card-meta">Lembrete para os irmãos</div>
-          </div>
-        `;
-
-        loading.classList.add("hidden");
-        content.classList.remove("hidden");
-      } catch (err) {
-        loading.classList.add("hidden");
-        errorEl.textContent = err.message || "Erro ao carregar dados.";
-        errorEl.classList.remove("hidden");
-        console.error(err);
+    function fazerLogin() {
+      const senha = document.getElementById("senha").value;
+      if (senha === CONFIG.ADMIN_PASSWORD) {
+        sessionStorage.setItem("casa91_admin", "1");
+        mostrarAdmin();
+      } else {
+        showAlert(null, "Senha incorreta", "error");
       }
     }
-    carregarDashboard();
+
+    function sair() {
+      sessionStorage.removeItem("casa91_admin");
+      location.reload();
+    }
+
+    function mostrarAdmin() {
+      document.getElementById("loginBox").classList.add("hidden");
+      document.getElementById("adminContent").classList.remove("hidden");
+      carregarTudo();
+    }
+
+    if (sessionStorage.getItem("casa91_admin") === "1") {
+      mostrarAdmin();
+    }
+
+    document.getElementById("senha")?.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") fazerLogin();
+    });
+
+    async function carregarTudo() {
+      try {
+        const [alvosRes, membrosRes, registrosRes, rankingRes] = await Promise.all([
+          window.FB.getAlvos(),
+          window.FB.getMembros(),
+          window.FB.getRegistros(),
+          window.FB.getRanking()
+        ]);
+
+        // Alvos
+        const alvos = alvosRes.alvos || {};
+        document.getElementById("visitasAtual").value = alvos.VisitasAtual || 0;
+        document.getElementById("batismosAtual").value = alvos.BatismosAtual || 0;
+
+        // Membros
+        const tbodyMembros = document.getElementById("listaMembros");
+        const membros = membrosRes.membros || [];
+        tbodyMembros.innerHTML = membros.length === 0
+          ? '<tr><td colspan="2" style="text-align:center;color:var(--text-muted);">Nenhum membro cadastrado</td></tr>'
+          : membros.map(m => `
+            <tr>
+              <td class="nome-membro">${m.nome}</td>
+              <td>
+                <div class="action-btns">
+                  <button class="btn btn-primary btn-sm" onclick="editarMembro('${m.id}', '${m.nome.replace(/'/g, "\\'")}')">Editar</button>
+                  <button class="btn btn-danger btn-sm" onclick="excluirMembro('${m.id}', '${m.nome.replace(/'/g, "\\'")}')">Excluir</button>
+                </div>
+              </td>
+            </tr>
+          `).join("");
+
+        // Registros
+        const tbody = document.getElementById("tabelaRegistros");
+        const registros = registrosRes.registros || [];
+        tbody.innerHTML = registros.length === 0
+          ? '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);">Nenhum registro</td></tr>'
+          : registros.map(r => `
+            <tr>
+              <td class="nome-membro">${r.Nome || ""}</td>
+              <td>${formatDateBR(r.Data)}</td>
+              <td>${r.DiaSemana || ""}</td>
+              <td>${r.Minutos || 0}</td>
+              <td>
+                <div class="action-btns">
+                  <button class="btn btn-primary btn-sm" onclick="editarRegistro('${r.id}', '${(r.Nome||"").replace(/'/g, "\\'")}', '${r.Data}', '${r.DiaSemana}', ${r.Minutos})">Editar</button>
+                  <button class="btn btn-danger btn-sm" onclick="excluirRegistro('${r.id}')">Excluir</button>
+                </div>
+              </td>
+            </tr>
+          `).join("");
+
+        // Ranking
+        const rankingEl = document.getElementById("rankingAdmin");
+        const ranking = rankingRes.ranking || [];
+        rankingEl.innerHTML = ranking.length === 0
+          ? '<li style="color:var(--text-muted);text-align:center;">Sem dados</li>'
+          : ranking.map((r, i) => `
+            <li class="ranking-item">
+              <span class="ranking-pos">${i + 1}º</span>
+              <span class="ranking-name">${r.nome}</span>
+              <span class="ranking-hours">${r.horas} h (${r.minutos} min)</span>
+            </li>
+          `).join("");
+
+      } catch (err) {
+        showAlert(null, err.message, "error");
+      }
+    }
+
+    // ===== Funções globais =====
+    window.mostrarAddMembro = function() {
+      document.getElementById("addMembroBox").classList.toggle("hidden");
+    };
+
+    window.adicionarMembro = async function() {
+      const nome = document.getElementById("novoMembro").value.trim();
+      if (!nome) {
+        showAlert(null, "Digite um nome", "error");
+        return;
+      }
+      try {
+        await window.FB.addMembro(nome);
+        showAlert(null, "Membro adicionado!", "success");
+        document.getElementById("novoMembro").value = "";
+        document.getElementById("addMembroBox").classList.add("hidden");
+        carregarTudo();
+      } catch (err) {
+        showAlert(null, err.message, "error");
+      }
+    };
+
+    window.editarMembro = async function(id, nomeAtual) {
+      const novoNome = prompt("Editar nome do membro:", nomeAtual);
+      if (novoNome === null || novoNome.trim() === "") return;
+      try {
+        await window.FB.updateMembro(id, novoNome.trim());
+        showAlert(null, "Nome atualizado!", "success");
+        carregarTudo();
+      } catch (err) {
+        showAlert(null, err.message, "error");
+      }
+    };
+
+    window.excluirMembro = async function(id, nome) {
+      if (!confirm(`Excluir o membro "${nome}"?`)) return;
+      try {
+        await window.FB.deleteMembro(id);
+        showAlert(null, "Membro excluído", "success");
+        carregarTudo();
+      } catch (err) {
+        showAlert(null, err.message, "error");
+      }
+    };
+
+    window.editarRegistro = async function(id, nome, data, diaSemana, minutos) {
+      const novo = prompt(`Editar minutos de ${nome}\n${diaSemana} ${formatDateBR(data)}\n\nDigite o novo valor:`, minutos);
+      if (novo === null) return;
+      const valor = parseInt(novo);
+      if (isNaN(valor) || valor < 0) {
+        showAlert(null, "Valor inválido", "error");
+        return;
+      }
+      try {
+        await window.FB.updateRegistro(id, valor);
+        showAlert(null, "Registro atualizado!", "success");
+        carregarTudo();
+      } catch (err) {
+        showAlert(null, err.message, "error");
+      }
+    };
+
+    window.excluirRegistro = async function(id) {
+      if (!confirm("Excluir este registro de oração?")) return;
+      try {
+        await window.FB.deleteRegistro(id);
+        showAlert(null, "Registro excluído", "success");
+        carregarTudo();
+      } catch (err) {
+        showAlert(null, err.message, "error");
+      }
+    };
+
+    window.salvarAlvos = async function() {
+      const visitas = Number(document.getElementById("visitasAtual").value) || 0;
+      const batismos = Number(document.getElementById("batismosAtual").value) || 0;
+      try {
+        await window.FB.updateAlvos({
+          VisitasAtual: visitas,
+          BatismosAtual: batismos
+        });
+        showAlert(null, "Alvos atualizados!", "success");
+      } catch (err) {
+        showAlert(null, err.message, "error");
+      }
+    };
+
+    window.fazerLogin = fazerLogin;
+    window.sair = sair;
   </script>
 </body>
 </html>
