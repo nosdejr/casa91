@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#1e40af">
+  <title>Célula Raízes • Projeto Casa 91 | Jejum 21 Dias</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="header">
+    <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">🌙</button>
+    <div class="brand">Célula Raízes</div>
+    <h1>Projeto Casa 91</h1>
+    <p>Jejum e Oração • 21 Dias</p>
+  </header>
+
+  <nav class="nav">
+    <a href="index.html" class="active">Dashboard</a>
+    <a href="formulario.html">Jejum 21 Dias</a>
+    <a href="admin.html">Admin</a>
+  </nav>
+
+  <main class="container">
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      <p>Carregando dados...</p>
+    </div>
+
+    <div id="content" class="hidden">
+      <!-- Cards dos Alvos -->
+      <section class="cards-grid" id="cards">
+        <!-- Preenchido via JS -->
+      </section>
+
+      <!-- Botão CTA para o formulário -->
+      <div class="cta-box">
+        <a href="formulario.html" class="btn btn-primary">
+          Lançar Tempo de Oração
+        </a>
+      </div>
+
+      <!-- Total da Célula -->
+      <section class="form-section">
+        <h2>Total de Oração da Célula</h2>
+        <div class="card full" style="box-shadow:none;border:none;padding:0;background:transparent;">
+          <div class="card-value" id="totalHoras">0 h</div>
+          <div class="card-meta">Soma de todos os irmãos</div>
+        </div>
+      </section>
+
+      <!-- Ranking -->
+      <section class="form-section">
+        <h2>Ranking de Oração</h2>
+        <ul class="ranking-list" id="rankingList">
+          <!-- Preenchido via JS -->
+        </ul>
+      </section>
+    </div>
+
+    <div id="error" class="alert alert-error hidden"></div>
+  </main>
+
+  <footer class="footer">
+    <div class="brand-line">Célula Raízes • Projeto Casa 91</div>
+    Jejum 21 Dias • 2026
+  </footer>
+
+  <script src="js/app.js"></script>
+  <script>
+    async function carregarDashboard() {
+      const loading = document.getElementById('loading');
+      const content = document.getElementById('content');
+      const errorEl = document.getElementById('error');
+
+      try {
+        const [alvosRes, rankingRes] = await Promise.all([
+          apiGet('getAlvos'),
+          apiGet('getRanking')
+        ]);
+
+        if (alvosRes.error || rankingRes.error) {
+          throw new Error(alvosRes.error || rankingRes.error);
+        }
+
+        const alvos = alvosRes.alvos;
+        const ranking = rankingRes.ranking || [];
+
+        const horasMeta = Number(alvos.HorasMeta) || 158;
+        const horasAtual = Number(alvos.HorasAtual) || 0;
+        const visitasMeta = Number(alvos.VisitasMeta) || 3;
+        const visitasAtual = Number(alvos.VisitasAtual) || 0;
+        const batismosMeta = Number(alvos.BatismosMeta) || 3;
+        const batismosAtual = Number(alvos.BatismosAtual) || 0;
+
+        const pctHoras = Math.min(100, Math.round((horasAtual / horasMeta) * 100));
+        const pctVisitas = Math.min(100, Math.round((visitasAtual / visitasMeta) * 100));
+        const pctBatismos = Math.min(100, Math.round((batismosAtual / batismosMeta) * 100));
+
+        function progressClass(pct) {
+          if (pct >= 80) return '';
+          if (pct >= 40) return 'warning';
+          return 'danger';
+        }
+
+        document.getElementById('cards').innerHTML = `
+          <div class="card">
+            <div class="card-title">Horas de Oração</div>
+            <div class="card-value">${horasAtual} <small style="font-size:0.9rem;font-weight:500;">/ ${horasMeta}h</small></div>
+            <div class="progress-bar">
+              <div class="progress-fill ${progressClass(pctHoras)}" style="width:${pctHoras}%"></div>
+            </div>
+            <div class="card-meta">${pctHoras}% do alvo</div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Visitas (Casas)</div>
+            <div class="card-value">${visitasAtual} <small style="font-size:0.9rem;font-weight:500;">/ ${visitasMeta}</small></div>
+            <div class="progress-bar">
+              <div class="progress-fill ${progressClass(pctVisitas)}" style="width:${pctVisitas}%"></div>
+            </div>
+            <div class="card-meta">${pctVisitas}% do alvo</div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Batismo</div>
+            <div class="card-value">${batismosAtual} <small style="font-size:0.9rem;font-weight:500;">/ ${batismosMeta}</small></div>
+            <div class="progress-bar">
+              <div class="progress-fill ${progressClass(pctBatismos)}" style="width:${pctBatismos}%"></div>
+            </div>
+            <div class="card-meta">${pctBatismos}% do alvo</div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Conversão / Vidas</div>
+            <div class="card-value" style="font-size:1.25rem;">${alvos.Conversao || '5 por Membro'}</div>
+            <div class="card-meta">Lembrete para os irmãos</div>
+          </div>
+        `;
+
+        document.getElementById('totalHoras').textContent = horasAtual + ' h';
+
+        const list = document.getElementById('rankingList');
+        if (ranking.length === 0) {
+          list.innerHTML = '<li class="text-center" style="color:var(--text-muted);padding:1rem;">Nenhum registro ainda</li>';
+        } else {
+          list.innerHTML = ranking.map((r, i) => `
+            <li class="ranking-item">
+              <span class="ranking-pos">${i + 1}º</span>
+              <span class="ranking-name">${r.nome}</span>
+              <span class="ranking-hours">${r.horas} h</span>
+            </li>
+          `).join('');
+        }
+
+        loading.classList.add('hidden');
+        content.classList.remove('hidden');
+      } catch (err) {
+        loading.classList.add('hidden');
+        errorEl.textContent = 'Erro ao carregar dados. Verifique a configuração da API no arquivo js/app.js';
+        errorEl.classList.remove('hidden');
+        console.error(err);
+      }
+    }
+
+    carregarDashboard();
+  </script>
+</body>
+</html>

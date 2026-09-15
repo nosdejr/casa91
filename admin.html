@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#1e40af">
+  <title>Admin | Célula Raízes • Casa 91</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="header">
+    <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">🌙</button>
+    <div class="brand">Célula Raízes • Projeto Casa 91</div>
+    <h1>Área Administrativa</h1>
+    <p>Jejum 21 Dias</p>
+  </header>
+
+  <nav class="nav">
+    <a href="index.html">Dashboard</a>
+    <a href="formulario.html">Jejum 21 Dias</a>
+    <a href="admin.html" class="active">Admin</a>
+  </nav>
+
+  <main class="container">
+    <!-- Login -->
+    <div id="loginBox" class="admin-login form-section">
+      <h2>Acesso Administrativo</h2>
+      <div class="form-group">
+        <label for="senha">Senha</label>
+        <input type="password" id="senha" placeholder="Digite a senha">
+      </div>
+      <button class="btn btn-primary" onclick="fazerLogin()">Entrar</button>
+      <div id="loginAlert" class="alert mt-2"></div>
+    </div>
+
+    <!-- Conteúdo Admin -->
+    <div id="adminContent" class="hidden">
+      <div id="adminAlert" class="alert"></div>
+
+      <!-- Atualizar Alvos -->
+      <section class="form-section admin-section">
+        <h3>Alvos / Progresso</h3>
+        <div class="form-group">
+          <label>Visitas Atuais</label>
+          <input type="number" id="visitasAtual" min="0">
+        </div>
+        <div class="form-group">
+          <label>Batismos Atuais</label>
+          <input type="number" id="batismosAtual" min="0">
+        </div>
+        <button class="btn btn-primary" onclick="salvarAlvos()">Salvar Alvos</button>
+      </section>
+
+      <!-- Gerenciar Membros -->
+      <section class="form-section admin-section">
+        <h3>
+          Membros
+          <button class="btn btn-success" style="width:auto;padding:0.4rem 0.8rem;font-size:0.85rem;" onclick="mostrarAddMembro()">+ Adicionar</button>
+        </h3>
+
+        <div id="addMembroBox" class="hidden mb-2">
+          <div class="form-group">
+            <input type="text" id="novoMembro" placeholder="Nome do irmão">
+          </div>
+          <button class="btn btn-success" onclick="adicionarMembro()">Salvar Nome</button>
+        </div>
+
+        <ul class="ranking-list" id="listaMembros">
+          <!-- Preenchido via JS -->
+        </ul>
+      </section>
+
+      <!-- Registros de Oração -->
+      <section class="form-section admin-section">
+        <h3>Registros de Oração</h3>
+        <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.75rem;">
+          Clique em "Excluir" para remover um lançamento incorreto.
+        </p>
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Data</th>
+                <th>Dia</th>
+                <th>Min</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tabelaRegistros">
+              <!-- Preenchido via JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Ranking completo -->
+      <section class="form-section admin-section">
+        <h3>Ranking Completo</h3>
+        <ul class="ranking-list" id="rankingAdmin">
+          <!-- Preenchido via JS -->
+        </ul>
+      </section>
+
+      <button class="btn btn-danger" style="width:100%;margin-top:1rem;" onclick="sair()">Sair</button>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="brand-line">Célula Raízes • Projeto Casa 91</div>
+    Área Restrita • Jejum 21 Dias
+  </footer>
+
+  <script src="js/app.js"></script>
+  <script>
+    function fazerLogin() {
+      const senha = document.getElementById('senha').value;
+      if (senha === CONFIG.ADMIN_PASSWORD) {
+        sessionStorage.setItem('casa91_admin', '1');
+        mostrarAdmin();
+      } else {
+        showAlert('loginAlert', 'Senha incorreta', 'error');
+      }
+    }
+
+    function sair() {
+      sessionStorage.removeItem('casa91_admin');
+      location.reload();
+    }
+
+    function mostrarAdmin() {
+      document.getElementById('loginBox').classList.add('hidden');
+      document.getElementById('adminContent').classList.remove('hidden');
+      carregarTudo();
+    }
+
+    if (sessionStorage.getItem('casa91_admin') === '1') {
+      mostrarAdmin();
+    }
+
+    document.getElementById('senha')?.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') fazerLogin();
+    });
+
+    async function carregarTudo() {
+      try {
+        const [alvosRes, membrosRes, registrosRes, rankingRes] = await Promise.all([
+          apiGet('getAlvos'),
+          apiGet('getMembros'),
+          apiGet('getRegistros'),
+          apiGet('getRanking')
+        ]);
+
+        const alvos = alvosRes.alvos || {};
+        document.getElementById('visitasAtual').value = alvos.VisitasAtual || 0;
+        document.getElementById('batismosAtual').value = alvos.BatismosAtual || 0;
+
+        const lista = document.getElementById('listaMembros');
+        const membros = membrosRes.membros || [];
+        if (membros.length === 0) {
+          lista.innerHTML = '<li style="color:var(--text-muted);padding:0.5rem;">Nenhum membro cadastrado</li>';
+        } else {
+          lista.innerHTML = membros.map(n => `
+            <li class="ranking-item">
+              <span class="ranking-name">${n}</span>
+              <button class="btn btn-danger" onclick="excluirMembro('${n.replace(/'/g, "\\'")}')">Excluir</button>
+            </li>
+          `).join('');
+        }
+
+        const tbody = document.getElementById('tabelaRegistros');
+        const registros = (registrosRes.registros || []).reverse();
+        if (registros.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);">Nenhum registro</td></tr>';
+        } else {
+          tbody.innerHTML = registros.map(r => `
+            <tr>
+              <td>${r.Nome || ''}</td>
+              <td>${formatDateBR(r.Data)}</td>
+              <td>${r.DiaSemana || ''}</td>
+              <td>${r.Minutos || 0}</td>
+              <td>
+                <button class="btn btn-danger" onclick="excluirRegistro(${r.row})">Excluir</button>
+              </td>
+            </tr>
+          `).join('');
+        }
+
+        const rankingEl = document.getElementById('rankingAdmin');
+        const ranking = rankingRes.ranking || [];
+        rankingEl.innerHTML = ranking.map((r, i) => `
+          <li class="ranking-item">
+            <span class="ranking-pos">${i + 1}º</span>
+            <span class="ranking-name">${r.nome}</span>
+            <span class="ranking-hours">${r.horas} h (${r.minutos} min)</span>
+          </li>
+        `).join('') || '<li style="color:var(--text-muted);">Sem dados</li>';
+
+      } catch (err) {
+        showAlert('adminAlert', 'Erro ao carregar dados: ' + err.message, 'error');
+      }
+    }
+
+    function mostrarAddMembro() {
+      document.getElementById('addMembroBox').classList.toggle('hidden');
+    }
+
+    async function adicionarMembro() {
+      const nome = document.getElementById('novoMembro').value.trim();
+      if (!nome) {
+        showAlert('adminAlert', 'Digite um nome', 'error');
+        return;
+      }
+      try {
+        const res = await apiPost({ action: 'addMembro', nome });
+        if (res.error) throw new Error(res.error);
+        showAlert('adminAlert', 'Membro adicionado!', 'success');
+        document.getElementById('novoMembro').value = '';
+        document.getElementById('addMembroBox').classList.add('hidden');
+        carregarTudo();
+      } catch (err) {
+        showAlert('adminAlert', err.message, 'error');
+      }
+    }
+
+    async function excluirMembro(nome) {
+      if (!confirm(`Excluir o membro "${nome}"?`)) return;
+      try {
+        const res = await apiPost({ action: 'deleteMembro', nome });
+        if (res.error) throw new Error(res.error);
+        showAlert('adminAlert', 'Membro excluído', 'success');
+        carregarTudo();
+      } catch (err) {
+        showAlert('adminAlert', err.message, 'error');
+      }
+    }
+
+    async function excluirRegistro(row) {
+      if (!confirm('Excluir este registro de oração?')) return;
+      try {
+        const res = await apiPost({ action: 'deleteRegistro', row });
+        if (res.error) throw new Error(res.error);
+        showAlert('adminAlert', 'Registro excluído', 'success');
+        carregarTudo();
+      } catch (err) {
+        showAlert('adminAlert', err.message, 'error');
+      }
+    }
+
+    async function salvarAlvos() {
+      const visitas = Number(document.getElementById('visitasAtual').value) || 0;
+      const batismos = Number(document.getElementById('batismosAtual').value) || 0;
+      try {
+        const res = await apiPost({
+          action: 'updateAlvos',
+          VisitasAtual: visitas,
+          BatismosAtual: batismos
+        });
+        if (res.error) throw new Error(res.error);
+        showAlert('adminAlert', 'Alvos atualizados!', 'success');
+      } catch (err) {
+        showAlert('adminAlert', err.message, 'error');
+      }
+    }
+  </script>
+</body>
+</html>

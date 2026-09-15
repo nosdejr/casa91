@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#1e40af">
+  <title>Jejum 21 Dias | Célula Raízes • Casa 91</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="header">
+    <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">🌙</button>
+    <div class="brand">Célula Raízes • Projeto Casa 91</div>
+    <h1>Jejum 21 Dias</h1>
+    <p>Lançamento Semanal de Oração</p>
+  </header>
+
+  <nav class="nav">
+    <a href="index.html">Dashboard</a>
+    <a href="formulario.html" class="active">Jejum 21 Dias</a>
+    <a href="admin.html">Admin</a>
+  </nav>
+
+  <main class="container">
+    <div id="alert" class="alert"></div>
+
+    <section class="form-section">
+      <h2>Registrar Tempo de Oração</h2>
+      <p class="subtitle">
+        Selecione seu nome e a semana. Preencha os minutos de cada dia e envie tudo de uma vez.
+      </p>
+
+      <form id="formOração">
+        <div class="form-group">
+          <label for="nome">Seu Nome</label>
+          <select id="nome" required>
+            <option value="">Carregando nomes...</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="semana">Semana</label>
+          <select id="semana" required>
+            <option value="1">1ª Semana (14/09 a 20/09)</option>
+            <option value="2">2ª Semana (21/09 a 27/09)</option>
+            <option value="3">3ª Semana (28/09 a 04/10)</option>
+          </select>
+        </div>
+
+        <div class="table-responsive">
+          <table class="days-table">
+            <thead>
+              <tr>
+                <th>Dia</th>
+                <th>Data</th>
+                <th>Minutos</th>
+              </tr>
+            </thead>
+            <tbody id="diasBody">
+              <!-- Preenchido via JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <p style="font-size:0.8rem;color:var(--text-muted);margin:0.75rem 0 1.25rem;">
+          Deixe em branco ou 0 os dias em que não orou. Só serão salvos os dias com minutos &gt; 0.
+        </p>
+
+        <button type="submit" class="btn btn-primary" id="btnEnviar">
+          Enviar Registro da Semana
+        </button>
+      </form>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="brand-line">Célula Raízes • Projeto Casa 91</div>
+    Jejum 21 Dias • 2026
+  </footer>
+
+  <script src="js/app.js"></script>
+  <script>
+    async function carregarMembros() {
+      const select = document.getElementById('nome');
+      try {
+        const res = await apiGet('getMembros');
+        if (res.error) throw new Error(res.error);
+
+        const membros = res.membros || [];
+        select.innerHTML = '<option value="">Selecione seu nome</option>';
+        membros.forEach(n => {
+          const opt = document.createElement('option');
+          opt.value = n;
+          opt.textContent = n;
+          select.appendChild(opt);
+        });
+      } catch (err) {
+        select.innerHTML = '<option value="">Erro ao carregar nomes</option>';
+        showAlert('alert', 'Erro ao carregar lista de nomes. Verifique a API.', 'error');
+      }
+    }
+
+    function renderDias() {
+      const semana = document.getElementById('semana').value;
+      const dias = CONFIG.SEMANAS[semana].dias;
+      const tbody = document.getElementById('diasBody');
+
+      tbody.innerHTML = dias.map((d, i) => `
+        <tr>
+          <td class="day-name">${d.diaSemana}</td>
+          <td class="day-date">${formatDateBR(d.data)}</td>
+          <td>
+            <input type="number" min="0" max="1440" step="1" 
+                   id="min_${i}" placeholder="0" 
+                   data-data="${d.data}" data-dia="${d.diaSemana}">
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    document.getElementById('formOração').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const nome = document.getElementById('nome').value;
+      const semana = document.getElementById('semana').value;
+      const btn = document.getElementById('btnEnviar');
+
+      if (!nome) {
+        showAlert('alert', 'Selecione seu nome.', 'error');
+        return;
+      }
+
+      const dias = [];
+      document.querySelectorAll('#diasBody input').forEach(input => {
+        const minutos = parseInt(input.value) || 0;
+        if (minutos > 0) {
+          dias.push({
+            data: input.dataset.data,
+            diaSemana: input.dataset.dia,
+            minutos: minutos
+          });
+        }
+      });
+
+      if (dias.length === 0) {
+        showAlert('alert', 'Preencha pelo menos um dia com minutos de oração.', 'error');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Enviando...';
+
+      try {
+        const res = await apiPost({
+          action: 'submitOração',
+          nome: nome,
+          semana: Number(semana),
+          dias: dias
+        });
+
+        if (res.error) throw new Error(res.error);
+
+        showAlert('alert', res.message || 'Registro enviado com sucesso! Obrigado.', 'success');
+        document.querySelectorAll('#diasBody input').forEach(i => i.value = '');
+      } catch (err) {
+        showAlert('alert', 'Erro ao enviar: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Enviar Registro da Semana';
+      }
+    });
+
+    document.getElementById('semana').addEventListener('change', renderDias);
+
+    carregarMembros();
+    renderDias();
+  </script>
+</body>
+</html>
