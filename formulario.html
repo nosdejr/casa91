@@ -107,9 +107,16 @@
           <td class="day-name">${d.diaSemana}</td>
           <td>${formatDateBR(d.data)}</td>
           <td>
-            <input type="number" min="0" max="1440" step="1"
-                   id="min_${i}" placeholder="0"
-                   data-data="${d.data}" data-dia="${d.diaSemana}">
+            <input type="number" 
+                   inputmode="numeric" 
+                   pattern="[0-9]*"
+                   min="0" 
+                   max="1440" 
+                   step="1"
+                   id="min_${i}" 
+                   placeholder="0"
+                   data-data="${d.data}" 
+                   data-dia="${d.diaSemana}">
           </td>
         </tr>
       `).join("");
