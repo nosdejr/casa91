@@ -22,8 +22,6 @@
   </div>
 
   <main class="container">
-    <div id="alert" class="alert"></div>
-
     <section class="form-section">
       <h2>Registrar Tempo de Oração</h2>
       <p class="subtitle">
@@ -60,13 +58,15 @@
           </table>
         </div>
 
-        <p style="font-size:0.8rem;color:var(--text-muted);margin:0.75rem 0 1.25rem;">
+        <p style="font-size:0.8rem;color:var(--text-muted);margin:0.75rem 0 1.25rem;text-align:center;">
           Deixe em branco ou 0 os dias em que não orou. Só serão salvos os dias com minutos &gt; 0.
         </p>
 
-        <button type="submit" class="btn btn-primary" id="btnEnviar">
-          Enviar Registro da Semana
-        </button>
+        <div style="text-align:center;">
+          <button type="submit" class="btn btn-primary" id="btnEnviar" style="width:auto;min-width:220px;">
+            Enviar Registro da Semana
+          </button>
+        </div>
       </form>
     </section>
   </main>
@@ -85,15 +85,15 @@
         const res = await window.FB.getMembros();
         const membros = res.membros || [];
         select.innerHTML = '<option value="">Selecione seu nome</option>';
-        membros.forEach(n => {
+        membros.forEach(m => {
           const opt = document.createElement("option");
-          opt.value = n;
-          opt.textContent = n;
+          opt.value = m.nome;
+          opt.textContent = m.nome;
           select.appendChild(opt);
         });
       } catch (err) {
         select.innerHTML = '<option value="">Erro ao carregar nomes</option>';
-        showAlert("alert", err.message, "error");
+        showAlert(null, err.message, "error");
       }
     }
 
@@ -105,7 +105,7 @@
       tbody.innerHTML = dias.map((d, i) => `
         <tr>
           <td class="day-name">${d.diaSemana}</td>
-          <td class="day-date">${formatDateBR(d.data)}</td>
+          <td>${formatDateBR(d.data)}</td>
           <td>
             <input type="number" min="0" max="1440" step="1"
                    id="min_${i}" placeholder="0"
@@ -123,7 +123,7 @@
       const btn = document.getElementById("btnEnviar");
 
       if (!nome) {
-        showAlert("alert", "Selecione seu nome.", "error");
+        showAlert(null, "Selecione seu nome.", "error");
         return;
       }
 
@@ -140,7 +140,7 @@
       });
 
       if (dias.length === 0) {
-        showAlert("alert", "Preencha pelo menos um dia com minutos de oração.", "error");
+        showAlert(null, "Preencha pelo menos um dia com minutos de oração.", "error");
         return;
       }
 
@@ -153,11 +153,10 @@
           semana: Number(semana),
           dias: dias
         });
-
-        showAlert("alert", res.message || "Registro enviado com sucesso!", "success");
+        showAlert(null, res.message || "Registro enviado com sucesso!", "success");
         document.querySelectorAll("#diasBody input").forEach(i => i.value = "");
       } catch (err) {
-        showAlert("alert", err.message, "error");
+        showAlert(null, err.message, "error");
       } finally {
         btn.disabled = false;
         btn.textContent = "Enviar Registro da Semana";
