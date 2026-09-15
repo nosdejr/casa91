@@ -56,7 +56,7 @@ body {
   transition: background 0.3s, color 0.3s;
 }
 
-/* ========== HEADER + NAV FIXOS JUNTOS ========== */
+/* ========== HEADER + NAV FIXOS ========== */
 .top-bar {
   position: sticky;
   top: 0;
@@ -110,7 +110,7 @@ body {
   background: rgba(255,255,255,0.25);
 }
 
-/* Navigation - colada no header */
+/* Navigation */
 .nav {
   display: flex;
   justify-content: center;
@@ -285,7 +285,7 @@ body {
 .days-table th,
 .days-table td {
   padding: 0.55rem 0.35rem;
-  text-align: left;
+  text-align: center;
   border-bottom: 1px solid var(--border);
   font-size: 0.9rem;
 }
@@ -299,6 +299,12 @@ body {
   letter-spacing: 0.03em;
 }
 
+.days-table td.day-name {
+  text-align: left;
+  font-weight: 600;
+  color: var(--primary);
+}
+
 .days-table input {
   width: 72px;
   padding: 0.45rem;
@@ -308,16 +314,6 @@ body {
   font-size: 1rem;
   background: var(--bg);
   color: var(--text);
-}
-
-.days-table .day-name {
-  font-weight: 600;
-  color: var(--primary);
-}
-
-.days-table .day-date {
-  font-size: 0.8rem;
-  color: var(--text-muted);
 }
 
 /* Buttons */
@@ -359,14 +355,35 @@ body {
 .btn-danger {
   background: var(--danger);
   color: white;
-  padding: 0.35rem 0.65rem;
-  font-size: 0.78rem;
-  width: auto;
 }
 
 .btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+/* ===== Botões de ícone (Editar / Excluir) ===== */
+.action-btns {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 0.4rem;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: nowrap !important;
+}
+
+.btn-icon {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  max-width: 36px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 1.05rem;
+  line-height: 1;
 }
 
 /* Ranking */
@@ -440,8 +457,9 @@ body {
 .admin-table th,
 .admin-table td {
   padding: 0.55rem 0.45rem;
-  text-align: left;
+  text-align: center;
   border-bottom: 1px solid var(--border);
+  vertical-align: middle;
 }
 
 .admin-table th {
@@ -455,6 +473,10 @@ body {
   background: var(--bg);
 }
 
+.admin-table td.nome-membro {
+  text-align: left;
+}
+
 .admin-table input {
   width: 100%;
   padding: 0.3rem;
@@ -465,7 +487,7 @@ body {
   color: var(--text);
 }
 
-/* Alerts */
+/* Alerts (legado - mantido por segurança) */
 .alert {
   padding: 0.8rem 1rem;
   border-radius: 9px;
@@ -500,18 +522,6 @@ body {
   background: #7f1d1d;
   color: #fecaca;
   border-color: #dc2626;
-}
-
-.alert-info {
-  background: #dbeafe;
-  color: #1e40af;
-  border: 1px solid #93c5fd;
-}
-
-[data-theme="dark"] .alert-info {
-  background: #1e3a8a;
-  color: #bfdbfe;
-  border-color: #3b82f6;
 }
 
 /* Loading */
@@ -554,66 +564,7 @@ body {
   margin: 0 auto;
 }
 
-/* Utilities */
-.hidden { display: none !important; }
-.text-center { text-align: center; }
-.mt-1 { margin-top: 0.5rem; }
-.mt-2 { margin-top: 1rem; }
-.mb-1 { margin-bottom: 0.5rem; }
-.mb-2 { margin-bottom: 1rem; }
-
-/* Desktop */
-@media (min-width: 640px) {
-  .header h1 { font-size: 1.55rem; }
-  .header .subtitle { font-size: 0.9rem; }
-  .cards-grid { gap: 1rem; }
-  .card-value { font-size: 1.8rem; }
-  .btn { width: auto; min-width: 170px; }
-  .days-table input { width: 90px; }
-}
-
-/* ===== Tabelas centralizadas ===== */
-.days-table th,
-.admin-table th {
-  text-align: center !important;
-}
-
-.days-table td {
-  text-align: center;
-}
-
-.days-table td.day-name {
-  text-align: left;
-  font-weight: 600;
-  color: var(--primary);
-}
-
-.admin-table td {
-  text-align: center;
-  vertical-align: middle;
-}
-
-.admin-table td.nome-membro {
-  text-align: left;
-}
-
-/* Botões de ação */
-.action-btns {
-  display: flex !important;
-  flex-direction: row !important;
-  gap: 0.4rem;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: nowrap !important;
-}
-
-.btn-sm {
-  padding: 0.28rem 0.55rem;
-  font-size: 0.75rem;
-  width: auto;
-}
-
-/* ===== Modal ===== */
+/* ===== Modal de aviso ===== */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -665,16 +616,20 @@ body {
   line-height: 1.4;
 }
 
-/* Botões só com ícone */
-.btn-icon {
-  width: 36px !important;
-  height: 36px !important;
-  min-width: 36px !important;
-  padding: 0 !important;
-  display: inline-flex !important;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  font-size: 1.05rem;
-  line-height: 1;
+/* Utilities */
+.hidden { display: none !important; }
+.text-center { text-align: center; }
+.mt-1 { margin-top: 0.5rem; }
+.mt-2 { margin-top: 1rem; }
+.mb-1 { margin-bottom: 0.5rem; }
+.mb-2 { margin-bottom: 1rem; }
+
+/* Desktop */
+@media (min-width: 640px) {
+  .header h1 { font-size: 1.55rem; }
+  .header .subtitle { font-size: 0.9rem; }
+  .cards-grid { gap: 1rem; }
+  .card-value { font-size: 1.8rem; }
+  .btn { width: auto; min-width: 170px; }
+  .days-table input { width: 90px; }
 }
