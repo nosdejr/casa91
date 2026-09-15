@@ -599,10 +599,12 @@ body {
 
 /* Botões de ação */
 .action-btns {
-  display: flex;
-  gap: 0.35rem;
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 0.4rem;
   justify-content: center;
-  flex-wrap: wrap;
+  align-items: center;
+  flex-wrap: nowrap !important;
 }
 
 .btn-sm {
@@ -665,21 +667,14 @@ body {
 
 /* Botões só com ícone */
 .btn-icon {
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  display: inline-flex;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
   align-items: center;
   justify-content: center;
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 1.05rem;
   line-height: 1;
-}
-
-.action-btns {
-  display: flex;
-  gap: 0.35rem;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: nowrap;   /* impede quebra de linha */
 }
