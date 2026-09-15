@@ -66,7 +66,7 @@
             <thead>
               <tr>
                 <th>Membros</th>
-                <th style="width:140px;">Ações</th>
+                <th style="width:110px;">Ações</th>
               </tr>
             </thead>
             <tbody id="listaMembros"></tbody>
@@ -78,7 +78,7 @@
       <section class="form-section admin-section">
         <h3>Registros de Oração</h3>
         <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.75rem;text-align:center;">
-          Use Editar para corrigir minutos ou Excluir para remover.
+          Use o lápis para editar os minutos ou a lixeira para excluir.
         </p>
         <div class="table-responsive">
           <table class="admin-table">
@@ -88,7 +88,7 @@
                 <th>Data</th>
                 <th>Dia</th>
                 <th>Min</th>
-                <th>Ações</th>
+                <th style="width:110px;">Ações</th>
               </tr>
             </thead>
             <tbody id="tabelaRegistros"></tbody>
@@ -167,8 +167,8 @@
               <td class="nome-membro">${m.nome}</td>
               <td>
                 <div class="action-btns">
-                  <button class="btn btn-primary btn-sm" onclick="editarMembro('${m.id}', '${m.nome.replace(/'/g, "\\'")}')">Editar</button>
-                  <button class="btn btn-danger btn-sm" onclick="excluirMembro('${m.id}', '${m.nome.replace(/'/g, "\\'")}')">Excluir</button>
+                  <button class="btn btn-primary btn-icon" title="Editar" onclick="editarMembro('${m.id}', '${m.nome.replace(/'/g, "\\'")}')">✏️</button>
+                  <button class="btn btn-danger btn-icon" title="Excluir" onclick="excluirMembro('${m.id}', '${m.nome.replace(/'/g, "\\'")}')">🗑️</button>
                 </div>
               </td>
             </tr>
@@ -187,8 +187,8 @@
               <td>${r.Minutos || 0}</td>
               <td>
                 <div class="action-btns">
-                  <button class="btn btn-primary btn-sm" onclick="editarRegistro('${r.id}', '${(r.Nome||"").replace(/'/g, "\\'")}', '${r.Data}', '${r.DiaSemana}', ${r.Minutos})">Editar</button>
-                  <button class="btn btn-danger btn-sm" onclick="excluirRegistro('${r.id}')">Excluir</button>
+                  <button class="btn btn-primary btn-icon" title="Editar" onclick="editarRegistro('${r.id}', '${(r.Nome||"").replace(/'/g, "\\'")}', '${r.Data}', '${r.DiaSemana}', ${r.Minutos})">✏️</button>
+                  <button class="btn btn-danger btn-icon" title="Excluir" onclick="excluirRegistro('${r.id}')">🗑️</button>
                 </div>
               </td>
             </tr>
