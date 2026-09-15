@@ -63,12 +63,29 @@ function updateThemeIcon(theme) {
   }
 }
 
+// Modal de aviso (substitui o antigo showAlert)
 function showAlert(elId, message, type = "success") {
-  const el = document.getElementById(elId);
-  if (!el) return;
-  el.textContent = message;
-  el.className = `alert alert-${type} show`;
-  setTimeout(() => el.classList.remove("show"), 5000);
+  const old = document.querySelector(".modal-overlay");
+  if (old) old.remove();
+
+  const icons = { success: "✅", error: "❌", info: "ℹ️" };
+
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal-box ${type}">
+      <div class="modal-icon">${icons[type] || "ℹ️"}</div>
+      <div class="modal-message">${message}</div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  requestAnimationFrame(() => overlay.classList.add("show"));
+
+  setTimeout(() => {
+    overlay.classList.remove("show");
+    setTimeout(() => overlay.remove(), 300);
+  }, 3000);
 }
 
 function formatDateBR(iso) {
