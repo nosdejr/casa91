@@ -29,12 +29,11 @@
         <input type="password" id="senha" placeholder="Digite a senha">
       </div>
       <button class="btn btn-primary" onclick="fazerLogin()">Entrar</button>
-      <div id="loginAlert" class="alert mt-2"></div>
     </div>
 
     <div id="adminContent" class="hidden">
-      <div id="adminAlert" class="alert"></div>
 
+      <!-- Alvos -->
       <section class="form-section admin-section">
         <h3>Alvos / Progresso</h3>
         <div class="form-group">
@@ -48,6 +47,7 @@
         <button class="btn btn-primary" onclick="salvarAlvos()">Salvar Alvos</button>
       </section>
 
+      <!-- Membros -->
       <section class="form-section admin-section">
         <h3>
           Membros
@@ -61,13 +61,24 @@
           <button class="btn btn-success" onclick="adicionarMembro()">Salvar Nome</button>
         </div>
 
-        <ul class="ranking-list" id="listaMembros"></ul>
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Membros</th>
+                <th style="width:140px;">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="listaMembros"></tbody>
+          </table>
+        </div>
       </section>
 
+      <!-- Registros -->
       <section class="form-section admin-section">
         <h3>Registros de Oração</h3>
-        <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.75rem;">
-          Clique em "Excluir" para remover um lançamento incorreto.
+        <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.75rem;text-align:center;">
+          Use Editar para corrigir minutos ou Excluir para remover.
         </p>
         <div class="table-responsive">
           <table class="admin-table">
@@ -77,7 +88,7 @@
                 <th>Data</th>
                 <th>Dia</th>
                 <th>Min</th>
-                <th></th>
+                <th>Ações</th>
               </tr>
             </thead>
             <tbody id="tabelaRegistros"></tbody>
@@ -85,6 +96,7 @@
         </div>
       </section>
 
+      <!-- Ranking (só no admin) -->
       <section class="form-section admin-section">
         <h3>Ranking Completo</h3>
         <ul class="ranking-list" id="rankingAdmin"></ul>
@@ -108,7 +120,7 @@
         sessionStorage.setItem("casa91_admin", "1");
         mostrarAdmin();
       } else {
-        showAlert("loginAlert", "Senha incorreta", "error");
+        showAlert(null, "Senha incorreta", "error");
       }
     }
 
@@ -140,49 +152,67 @@
           window.FB.getRanking()
         ]);
 
+        // Alvos
         const alvos = alvosRes.alvos || {};
         document.getElementById("visitasAtual").value = alvos.VisitasAtual || 0;
         document.getElementById("batismosAtual").value = alvos.BatismosAtual || 0;
 
-        const lista = document.getElementById("listaMembros");
+        // Membros
+        const tbodyMembros = document.getElementById("listaMembros");
         const membros = membrosRes.membros || [];
-        lista.innerHTML = membros.length === 0
-          ? '<li style="color:var(--text-muted);padding:0.5rem;">Nenhum membro cadastrado</li>'
-          : membros.map(n => `
-            <li class="ranking-item">
-              <span class="ranking-name">${n}</span>
-              <button class="btn btn-danger" onclick="excluirMembro('${n.replace(/'/g, "\\'")}')">Excluir</button>
-            </li>`).join("");
+        tbodyMembros.innerHTML = membros.length === 0
+          ? '<tr><td colspan="2" style="text-align:center;color:var(--text-muted);">Nenhum membro cadastrado</td></tr>'
+          : membros.map(m => `
+            <tr>
+              <td class="nome-membro">${m.nome}</td>
+              <td>
+                <div class="action-btns">
+                  <button class="btn btn-primary btn-sm" onclick="editarMembro('${m.id}', '${m.nome.replace(/'/g, "\\'")}')">Editar</button>
+                  <button class="btn btn-danger btn-sm" onclick="excluirMembro('${m.id}', '${m.nome.replace(/'/g, "\\'")}')">Excluir</button>
+                </div>
+              </td>
+            </tr>
+          `).join("");
 
+        // Registros
         const tbody = document.getElementById("tabelaRegistros");
         const registros = registrosRes.registros || [];
         tbody.innerHTML = registros.length === 0
           ? '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);">Nenhum registro</td></tr>'
           : registros.map(r => `
             <tr>
-              <td>${r.Nome || ""}</td>
+              <td class="nome-membro">${r.Nome || ""}</td>
               <td>${formatDateBR(r.Data)}</td>
               <td>${r.DiaSemana || ""}</td>
               <td>${r.Minutos || 0}</td>
               <td>
-                <button class="btn btn-danger" onclick="excluirRegistro('${r.id}')">Excluir</button>
+                <div class="action-btns">
+                  <button class="btn btn-primary btn-sm" onclick="editarRegistro('${r.id}', '${(r.Nome||"").replace(/'/g, "\\'")}', '${r.Data}', '${r.DiaSemana}', ${r.Minutos})">Editar</button>
+                  <button class="btn btn-danger btn-sm" onclick="excluirRegistro('${r.id}')">Excluir</button>
+                </div>
               </td>
-            </tr>`).join("");
+            </tr>
+          `).join("");
 
+        // Ranking
         const rankingEl = document.getElementById("rankingAdmin");
         const ranking = rankingRes.ranking || [];
-        rankingEl.innerHTML = ranking.map((r, i) => `
-          <li class="ranking-item">
-            <span class="ranking-pos">${i + 1}º</span>
-            <span class="ranking-name">${r.nome}</span>
-            <span class="ranking-hours">${r.horas} h (${r.minutos} min)</span>
-          </li>`).join("") || '<li style="color:var(--text-muted);">Sem dados</li>';
+        rankingEl.innerHTML = ranking.length === 0
+          ? '<li style="color:var(--text-muted);text-align:center;">Sem dados</li>'
+          : ranking.map((r, i) => `
+            <li class="ranking-item">
+              <span class="ranking-pos">${i + 1}º</span>
+              <span class="ranking-name">${r.nome}</span>
+              <span class="ranking-hours">${r.horas} h (${r.minutos} min)</span>
+            </li>
+          `).join("");
 
       } catch (err) {
-        showAlert("adminAlert", err.message, "error");
+        showAlert(null, err.message, "error");
       }
     }
 
+    // ===== Funções globais =====
     window.mostrarAddMembro = function() {
       document.getElementById("addMembroBox").classList.toggle("hidden");
     };
@@ -190,28 +220,57 @@
     window.adicionarMembro = async function() {
       const nome = document.getElementById("novoMembro").value.trim();
       if (!nome) {
-        showAlert("adminAlert", "Digite um nome", "error");
+        showAlert(null, "Digite um nome", "error");
         return;
       }
       try {
         await window.FB.addMembro(nome);
-        showAlert("adminAlert", "Membro adicionado!", "success");
+        showAlert(null, "Membro adicionado!", "success");
         document.getElementById("novoMembro").value = "";
         document.getElementById("addMembroBox").classList.add("hidden");
         carregarTudo();
       } catch (err) {
-        showAlert("adminAlert", err.message, "error");
+        showAlert(null, err.message, "error");
       }
     };
 
-    window.excluirMembro = async function(nome) {
-      if (!confirm(`Excluir o membro "${nome}"?`)) return;
+    window.editarMembro = async function(id, nomeAtual) {
+      const novoNome = prompt("Editar nome do membro:", nomeAtual);
+      if (novoNome === null || novoNome.trim() === "") return;
       try {
-        await window.FB.deleteMembro(nome);
-        showAlert("adminAlert", "Membro excluído", "success");
+        await window.FB.updateMembro(id, novoNome.trim());
+        showAlert(null, "Nome atualizado!", "success");
         carregarTudo();
       } catch (err) {
-        showAlert("adminAlert", err.message, "error");
+        showAlert(null, err.message, "error");
+      }
+    };
+
+    window.excluirMembro = async function(id, nome) {
+      if (!confirm(`Excluir o membro "${nome}"?`)) return;
+      try {
+        await window.FB.deleteMembro(id);
+        showAlert(null, "Membro excluído", "success");
+        carregarTudo();
+      } catch (err) {
+        showAlert(null, err.message, "error");
+      }
+    };
+
+    window.editarRegistro = async function(id, nome, data, diaSemana, minutos) {
+      const novo = prompt(`Editar minutos de ${nome}\n${diaSemana} ${formatDateBR(data)}\n\nDigite o novo valor:`, minutos);
+      if (novo === null) return;
+      const valor = parseInt(novo);
+      if (isNaN(valor) || valor < 0) {
+        showAlert(null, "Valor inválido", "error");
+        return;
+      }
+      try {
+        await window.FB.updateRegistro(id, valor);
+        showAlert(null, "Registro atualizado!", "success");
+        carregarTudo();
+      } catch (err) {
+        showAlert(null, err.message, "error");
       }
     };
 
@@ -219,10 +278,10 @@
       if (!confirm("Excluir este registro de oração?")) return;
       try {
         await window.FB.deleteRegistro(id);
-        showAlert("adminAlert", "Registro excluído", "success");
+        showAlert(null, "Registro excluído", "success");
         carregarTudo();
       } catch (err) {
-        showAlert("adminAlert", err.message, "error");
+        showAlert(null, err.message, "error");
       }
     };
 
@@ -234,9 +293,9 @@
           VisitasAtual: visitas,
           BatismosAtual: batismos
         });
-        showAlert("adminAlert", "Alvos atualizados!", "success");
+        showAlert(null, "Alvos atualizados!", "success");
       } catch (err) {
-        showAlert("adminAlert", err.message, "error");
+        showAlert(null, err.message, "error");
       }
     };
 
