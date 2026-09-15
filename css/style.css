@@ -257,7 +257,8 @@ body {
 .form-group select,
 .form-group input[type="number"],
 .form-group input[type="text"],
-.form-group input[type="password"] {
+.form-group input[type="password"],
+.form-group input[type="email"] {
   width: 100%;
   padding: 0.7rem 0.85rem;
   border: 1px solid var(--border);
