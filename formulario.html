@@ -14,7 +14,6 @@
       <h1>Célula Raízes</h1>
       <div class="subtitle">Projeto Casa 91</div>
     </header>
-
     <nav class="nav">
       <a href="index.html">Dashboard</a>
       <a href="formulario.html" class="active">Jejum 21 Dias</a>
@@ -72,36 +71,36 @@
     </section>
   </main>
 
-  <footer class="footer">
-    Célula Raízes • Igreja Videira de Ourinhos
-  </footer>
+  <footer class="footer">Célula Raízes • Igreja Videira de Ourinhos</footer>
 
+  <script type="module">
+    import * as FB from "./js/firebase.js";
+    window.FB = FB;
+  </script>
   <script src="js/app.js"></script>
-  <script>
+  <script type="module">
     async function carregarMembros() {
-      const select = document.getElementById('nome');
+      const select = document.getElementById("nome");
       try {
-        const res = await apiGet('getMembros');
-        if (res.error) throw new Error(res.error);
-
+        const res = await window.FB.getMembros();
         const membros = res.membros || [];
         select.innerHTML = '<option value="">Selecione seu nome</option>';
         membros.forEach(n => {
-          const opt = document.createElement('option');
+          const opt = document.createElement("option");
           opt.value = n;
           opt.textContent = n;
           select.appendChild(opt);
         });
       } catch (err) {
         select.innerHTML = '<option value="">Erro ao carregar nomes</option>';
-        showAlert('alert', err.message, 'error');
+        showAlert("alert", err.message, "error");
       }
     }
 
     function renderDias() {
-      const semana = document.getElementById('semana').value;
+      const semana = document.getElementById("semana").value;
       const dias = CONFIG.SEMANAS[semana].dias;
-      const tbody = document.getElementById('diasBody');
+      const tbody = document.getElementById("diasBody");
 
       tbody.innerHTML = dias.map((d, i) => `
         <tr>
@@ -113,23 +112,23 @@
                    data-data="${d.data}" data-dia="${d.diaSemana}">
           </td>
         </tr>
-      `).join('');
+      `).join("");
     }
 
-    document.getElementById('formOração').addEventListener('submit', async (e) => {
+    document.getElementById("formOração").addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const nome = document.getElementById('nome').value;
-      const semana = document.getElementById('semana').value;
-      const btn = document.getElementById('btnEnviar');
+      const nome = document.getElementById("nome").value;
+      const semana = document.getElementById("semana").value;
+      const btn = document.getElementById("btnEnviar");
 
       if (!nome) {
-        showAlert('alert', 'Selecione seu nome.', 'error');
+        showAlert("alert", "Selecione seu nome.", "error");
         return;
       }
 
       const dias = [];
-      document.querySelectorAll('#diasBody input').forEach(input => {
+      document.querySelectorAll("#diasBody input").forEach(input => {
         const minutos = parseInt(input.value) || 0;
         if (minutos > 0) {
           dias.push({
@@ -141,34 +140,31 @@
       });
 
       if (dias.length === 0) {
-        showAlert('alert', 'Preencha pelo menos um dia com minutos de oração.', 'error');
+        showAlert("alert", "Preencha pelo menos um dia com minutos de oração.", "error");
         return;
       }
 
       btn.disabled = true;
-      btn.textContent = 'Enviando...';
+      btn.textContent = "Enviando...";
 
       try {
-        const res = await apiPost({
-          action: 'submitOração',
+        const res = await window.FB.submitOração({
           nome: nome,
           semana: Number(semana),
           dias: dias
         });
 
-        if (res.error) throw new Error(res.error);
-
-        showAlert('alert', res.message || 'Registro enviado com sucesso! Obrigado.', 'success');
-        document.querySelectorAll('#diasBody input').forEach(i => i.value = '');
+        showAlert("alert", res.message || "Registro enviado com sucesso!", "success");
+        document.querySelectorAll("#diasBody input").forEach(i => i.value = "");
       } catch (err) {
-        showAlert('alert', err.message, 'error');
+        showAlert("alert", err.message, "error");
       } finally {
         btn.disabled = false;
-        btn.textContent = 'Enviar Registro da Semana';
+        btn.textContent = "Enviar Registro da Semana";
       }
     });
 
-    document.getElementById('semana').addEventListener('change', renderDias);
+    document.getElementById("semana").addEventListener("change", renderDias);
 
     carregarMembros();
     renderDias();
