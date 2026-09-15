@@ -33,19 +33,6 @@
       <div class="cta-box">
         <a href="formulario.html" class="btn btn-primary">Lançar Tempo de Oração</a>
       </div>
-
-      <section class="form-section">
-        <h2>Total de Oração da Célula</h2>
-        <div class="card full" style="box-shadow:none;border:none;padding:0;background:transparent;">
-          <div class="card-value" id="totalHoras">0 h</div>
-          <div class="card-meta">Soma de todos os irmãos</div>
-        </div>
-      </section>
-
-      <section class="form-section">
-        <h2>Ranking de Oração</h2>
-        <ul class="ranking-list" id="rankingList"></ul>
-      </section>
     </div>
 
     <div id="error" class="alert alert-error hidden"></div>
@@ -65,13 +52,8 @@
       const errorEl = document.getElementById("error");
 
       try {
-        const [alvosRes, rankingRes] = await Promise.all([
-          window.FB.getAlvos(),
-          window.FB.getRanking()
-        ]);
-
+        const alvosRes = await window.FB.getAlvos();
         const alvos = alvosRes.alvos || {};
-        const ranking = rankingRes.ranking || [];
 
         const horasMeta = Number(alvos.HorasMeta) || 158;
         const horasAtual = Number(alvos.HorasAtual) || 0;
@@ -108,18 +90,6 @@
             <div class="card-meta">Lembrete para os irmãos</div>
           </div>
         `;
-
-        document.getElementById("totalHoras").textContent = horasAtual + " h";
-
-        const list = document.getElementById("rankingList");
-        list.innerHTML = ranking.length === 0
-          ? '<li class="text-center" style="color:var(--text-muted);padding:1rem;">Nenhum registro ainda</li>'
-          : ranking.map((r, i) => `
-            <li class="ranking-item">
-              <span class="ranking-pos">${i + 1}º</span>
-              <span class="ranking-name">${r.nome}</span>
-              <span class="ranking-hours">${r.horas} h</span>
-            </li>`).join("");
 
         loading.classList.add("hidden");
         content.classList.remove("hidden");
