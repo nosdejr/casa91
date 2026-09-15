@@ -11,7 +11,8 @@ import {
   deleteDoc,
   query,
   orderBy,
-  serverTimestamp
+  serverTimestamp,
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -31,8 +32,10 @@ const db = getFirestore(app);
 export async function getMembros() {
   const snap = await getDocs(collection(db, "membros"));
   const membros = [];
-  snap.forEach(d => membros.push(d.data().nome));
-  membros.sort((a, b) => a.localeCompare(b, "pt-BR"));
+  snap.forEach(d => {
+    membros.push({ id: d.id, nome: d.data().nome });
+  });
+  membros.sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
   return { membros };
 }
 
@@ -71,7 +74,6 @@ export async function getAlvos() {
     alvos = { ...alvos, ...snap.data() };
   }
 
-  // Calcula total de horas
   const regSnap = await getDocs(collection(db, "registros"));
   let totalMin = 0;
   regSnap.forEach(d => totalMin += Number(d.data().minutos) || 0);
@@ -125,19 +127,26 @@ export async function addMembro(nome) {
   return { success: true };
 }
 
-export async function deleteMembro(nome) {
-  const snap = await getDocs(collection(db, "membros"));
-  const promises = [];
-  snap.forEach(d => {
-    if (d.data().nome === nome) promises.push(deleteDoc(d.ref));
-  });
-  await Promise.all(promises);
+export async function updateMembro(id, novoNome) {
+  await updateDoc(doc(db, "membros", id), { nome: novoNome.trim() });
+  return { success: true };
+}
+
+export async function deleteMembro(id) {
+  await deleteDoc(doc(db, "membros", id));
   return { success: true };
 }
 
 export async function updateAlvos(data) {
   const ref = doc(db, "alvos", "config");
   await setDoc(ref, data, { merge: true });
+  return { success: true };
+}
+
+export async function updateRegistro(id, novosMinutos) {
+  await updateDoc(doc(db, "registros", id), {
+    minutos: Number(novosMinutos)
+  });
   return { success: true };
 }
 
