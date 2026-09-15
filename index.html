@@ -4,22 +4,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <meta name="theme-color" content="#1e40af">
-  <title>Célula Raízes • Projeto Casa 91 | Jejum 21 Dias</title>
+  <title>Célula Raízes • Projeto Casa 91</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <header class="header">
-    <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">🌙</button>
-    <div class="brand">Célula Raízes</div>
-    <h1>Projeto Casa 91</h1>
-    <p>Jejum e Oração • 21 Dias</p>
-  </header>
+  <div class="top-bar">
+    <header class="header">
+      <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">🌙</button>
+      <h1>Célula Raízes</h1>
+      <div class="subtitle">Projeto Casa 91</div>
+    </header>
 
-  <nav class="nav">
-    <a href="index.html" class="active">Dashboard</a>
-    <a href="formulario.html">Jejum 21 Dias</a>
-    <a href="admin.html">Admin</a>
-  </nav>
+    <nav class="nav">
+      <a href="index.html" class="active">Dashboard</a>
+      <a href="formulario.html">Jejum 21 Dias</a>
+      <a href="admin.html">Admin</a>
+    </nav>
+  </div>
 
   <main class="container">
     <div id="loading" class="loading">
@@ -28,19 +29,14 @@
     </div>
 
     <div id="content" class="hidden">
-      <!-- Cards dos Alvos -->
-      <section class="cards-grid" id="cards">
-        <!-- Preenchido via JS -->
-      </section>
+      <section class="cards-grid" id="cards"></section>
 
-      <!-- Botão CTA para o formulário -->
       <div class="cta-box">
         <a href="formulario.html" class="btn btn-primary">
           Lançar Tempo de Oração
         </a>
       </div>
 
-      <!-- Total da Célula -->
       <section class="form-section">
         <h2>Total de Oração da Célula</h2>
         <div class="card full" style="box-shadow:none;border:none;padding:0;background:transparent;">
@@ -49,12 +45,9 @@
         </div>
       </section>
 
-      <!-- Ranking -->
       <section class="form-section">
         <h2>Ranking de Oração</h2>
-        <ul class="ranking-list" id="rankingList">
-          <!-- Preenchido via JS -->
-        </ul>
+        <ul class="ranking-list" id="rankingList"></ul>
       </section>
     </div>
 
@@ -62,8 +55,7 @@
   </main>
 
   <footer class="footer">
-    <div class="brand-line">Célula Raízes • Projeto Casa 91</div>
-    Jejum 21 Dias • 2026
+    Célula Raízes • Igreja Videira de Ourinhos
   </footer>
 
   <script src="js/app.js"></script>
@@ -79,11 +71,10 @@
           apiGet('getRanking')
         ]);
 
-        if (alvosRes.error || rankingRes.error) {
-          throw new Error(alvosRes.error || rankingRes.error);
-        }
+        if (alvosRes.error) throw new Error(alvosRes.error);
+        if (rankingRes.error) throw new Error(rankingRes.error);
 
-        const alvos = alvosRes.alvos;
+        const alvos = alvosRes.alvos || {};
         const ranking = rankingRes.ranking || [];
 
         const horasMeta = Number(alvos.HorasMeta) || 158;
@@ -157,7 +148,7 @@
         content.classList.remove('hidden');
       } catch (err) {
         loading.classList.add('hidden');
-        errorEl.textContent = 'Erro ao carregar dados. Verifique a configuração da API no arquivo js/app.js';
+        errorEl.textContent = err.message || 'Erro ao carregar dados.';
         errorEl.classList.remove('hidden');
         console.error(err);
       }

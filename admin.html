@@ -4,25 +4,25 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <meta name="theme-color" content="#1e40af">
-  <title>Admin | Célula Raízes • Casa 91</title>
+  <title>Admin | Célula Raízes</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <header class="header">
-    <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">🌙</button>
-    <div class="brand">Célula Raízes • Projeto Casa 91</div>
-    <h1>Área Administrativa</h1>
-    <p>Jejum 21 Dias</p>
-  </header>
+  <div class="top-bar">
+    <header class="header">
+      <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">🌙</button>
+      <h1>Célula Raízes</h1>
+      <div class="subtitle">Projeto Casa 91</div>
+    </header>
 
-  <nav class="nav">
-    <a href="index.html">Dashboard</a>
-    <a href="formulario.html">Jejum 21 Dias</a>
-    <a href="admin.html" class="active">Admin</a>
-  </nav>
+    <nav class="nav">
+      <a href="index.html">Dashboard</a>
+      <a href="formulario.html">Jejum 21 Dias</a>
+      <a href="admin.html" class="active">Admin</a>
+    </nav>
+  </div>
 
   <main class="container">
-    <!-- Login -->
     <div id="loginBox" class="admin-login form-section">
       <h2>Acesso Administrativo</h2>
       <div class="form-group">
@@ -33,11 +33,9 @@
       <div id="loginAlert" class="alert mt-2"></div>
     </div>
 
-    <!-- Conteúdo Admin -->
     <div id="adminContent" class="hidden">
       <div id="adminAlert" class="alert"></div>
 
-      <!-- Atualizar Alvos -->
       <section class="form-section admin-section">
         <h3>Alvos / Progresso</h3>
         <div class="form-group">
@@ -51,7 +49,6 @@
         <button class="btn btn-primary" onclick="salvarAlvos()">Salvar Alvos</button>
       </section>
 
-      <!-- Gerenciar Membros -->
       <section class="form-section admin-section">
         <h3>
           Membros
@@ -65,12 +62,9 @@
           <button class="btn btn-success" onclick="adicionarMembro()">Salvar Nome</button>
         </div>
 
-        <ul class="ranking-list" id="listaMembros">
-          <!-- Preenchido via JS -->
-        </ul>
+        <ul class="ranking-list" id="listaMembros"></ul>
       </section>
 
-      <!-- Registros de Oração -->
       <section class="form-section admin-section">
         <h3>Registros de Oração</h3>
         <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.75rem;">
@@ -87,19 +81,14 @@
                 <th></th>
               </tr>
             </thead>
-            <tbody id="tabelaRegistros">
-              <!-- Preenchido via JS -->
-            </tbody>
+            <tbody id="tabelaRegistros"></tbody>
           </table>
         </div>
       </section>
 
-      <!-- Ranking completo -->
       <section class="form-section admin-section">
         <h3>Ranking Completo</h3>
-        <ul class="ranking-list" id="rankingAdmin">
-          <!-- Preenchido via JS -->
-        </ul>
+        <ul class="ranking-list" id="rankingAdmin"></ul>
       </section>
 
       <button class="btn btn-danger" style="width:100%;margin-top:1rem;" onclick="sair()">Sair</button>
@@ -107,8 +96,7 @@
   </main>
 
   <footer class="footer">
-    <div class="brand-line">Célula Raízes • Projeto Casa 91</div>
-    Área Restrita • Jejum 21 Dias
+    Célula Raízes • Igreja Videira de Ourinhos
   </footer>
 
   <script src="js/app.js"></script>
@@ -151,19 +139,21 @@
           apiGet('getRanking')
         ]);
 
+        if (alvosRes.error) throw new Error(alvosRes.error);
+
         const alvos = alvosRes.alvos || {};
         document.getElementById('visitasAtual').value = alvos.VisitasAtual || 0;
         document.getElementById('batismosAtual').value = alvos.BatismosAtual || 0;
 
         const lista = document.getElementById('listaMembros');
-        const membros = membrosRes.membros || [];
+        const membros = (membrosRes.membros || []);
         if (membros.length === 0) {
           lista.innerHTML = '<li style="color:var(--text-muted);padding:0.5rem;">Nenhum membro cadastrado</li>';
         } else {
           lista.innerHTML = membros.map(n => `
             <li class="ranking-item">
               <span class="ranking-name">${n}</span>
-              <button class="btn btn-danger" onclick="excluirMembro('${n.replace(/'/g, "\\'")}')">Excluir</button>
+              <button class="btn btn-danger" onclick="excluirMembro('${String(n).replace(/'/g, "\\'")}')">Excluir</button>
             </li>
           `).join('');
         }
@@ -197,7 +187,7 @@
         `).join('') || '<li style="color:var(--text-muted);">Sem dados</li>';
 
       } catch (err) {
-        showAlert('adminAlert', 'Erro ao carregar dados: ' + err.message, 'error');
+        showAlert('adminAlert', err.message, 'error');
       }
     }
 
@@ -224,7 +214,7 @@
     }
 
     async function excluirMembro(nome) {
-      if (!confirm(`Excluir o membro "${nome}"?`)) return;
+      if (!confirm('Excluir o membro "' + nome + '"?')) return;
       try {
         const res = await apiPost({ action: 'deleteMembro', nome });
         if (res.error) throw new Error(res.error);

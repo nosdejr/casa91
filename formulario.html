@@ -4,22 +4,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <meta name="theme-color" content="#1e40af">
-  <title>Jejum 21 Dias | Célula Raízes • Casa 91</title>
+  <title>Jejum 21 Dias | Célula Raízes</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <header class="header">
-    <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">🌙</button>
-    <div class="brand">Célula Raízes • Projeto Casa 91</div>
-    <h1>Jejum 21 Dias</h1>
-    <p>Lançamento Semanal de Oração</p>
-  </header>
+  <div class="top-bar">
+    <header class="header">
+      <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">🌙</button>
+      <h1>Célula Raízes</h1>
+      <div class="subtitle">Projeto Casa 91</div>
+    </header>
 
-  <nav class="nav">
-    <a href="index.html">Dashboard</a>
-    <a href="formulario.html" class="active">Jejum 21 Dias</a>
-    <a href="admin.html">Admin</a>
-  </nav>
+    <nav class="nav">
+      <a href="index.html">Dashboard</a>
+      <a href="formulario.html" class="active">Jejum 21 Dias</a>
+      <a href="admin.html">Admin</a>
+    </nav>
+  </div>
 
   <main class="container">
     <div id="alert" class="alert"></div>
@@ -56,9 +57,7 @@
                 <th>Minutos</th>
               </tr>
             </thead>
-            <tbody id="diasBody">
-              <!-- Preenchido via JS -->
-            </tbody>
+            <tbody id="diasBody"></tbody>
           </table>
         </div>
 
@@ -74,8 +73,7 @@
   </main>
 
   <footer class="footer">
-    <div class="brand-line">Célula Raízes • Projeto Casa 91</div>
-    Jejum 21 Dias • 2026
+    Célula Raízes • Igreja Videira de Ourinhos
   </footer>
 
   <script src="js/app.js"></script>
@@ -96,7 +94,7 @@
         });
       } catch (err) {
         select.innerHTML = '<option value="">Erro ao carregar nomes</option>';
-        showAlert('alert', 'Erro ao carregar lista de nomes. Verifique a API.', 'error');
+        showAlert('alert', err.message, 'error');
       }
     }
 
@@ -110,8 +108,8 @@
           <td class="day-name">${d.diaSemana}</td>
           <td class="day-date">${formatDateBR(d.data)}</td>
           <td>
-            <input type="number" min="0" max="1440" step="1" 
-                   id="min_${i}" placeholder="0" 
+            <input type="number" min="0" max="1440" step="1"
+                   id="min_${i}" placeholder="0"
                    data-data="${d.data}" data-dia="${d.diaSemana}">
           </td>
         </tr>
@@ -163,7 +161,7 @@
         showAlert('alert', res.message || 'Registro enviado com sucesso! Obrigado.', 'success');
         document.querySelectorAll('#diasBody input').forEach(i => i.value = '');
       } catch (err) {
-        showAlert('alert', 'Erro ao enviar: ' + err.message, 'error');
+        showAlert('alert', err.message, 'error');
       } finally {
         btn.disabled = false;
         btn.textContent = 'Enviar Registro da Semana';
