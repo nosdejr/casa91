@@ -6,6 +6,39 @@
   <meta name="theme-color" content="#1e40af">
   <title>Admin | Célula Raízes</title>
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+    .pagination button {
+      width: auto;
+      min-width: 36px;
+      padding: 0.4rem 0.7rem;
+      font-size: 0.85rem;
+    }
+    .pagination .page-info {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      padding: 0 0.4rem;
+    }
+    .filtro-box {
+      margin-bottom: 0.9rem;
+    }
+    .filtro-box input {
+      width: 100%;
+      padding: 0.6rem 0.85rem;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      font-size: 0.95rem;
+      background: var(--bg);
+      color: var(--text);
+    }
+  </style>
 </head>
 <body>
   <div class="top-bar">
@@ -22,7 +55,6 @@
   </div>
 
   <main class="container" id="mainContainer">
-    <!-- Só o formulário de login existe no HTML inicial -->
     <div id="loginBox" class="admin-login form-section">
       <h2>Acesso Administrativo</h2>
       <div class="form-group">
@@ -45,12 +77,16 @@
   </script>
   <script src="js/app.js"></script>
   <script type="module">
-    // Observa o estado de autenticação
+    // Estado da paginação e filtro
+    let todosRegistros = [];
+    let paginaAtual = 1;
+    const ITENS_POR_PAGINA = 10;
+    let filtroNome = "";
+
     window.FB.onAuthChange((user) => {
       if (user) {
         renderAdmin();
       } else {
-        // Garante que só o login aparece
         document.getElementById("mainContainer").innerHTML = `
           <div id="loginBox" class="admin-login form-section">
             <h2>Acesso Administrativo</h2>
@@ -109,12 +145,12 @@
       }
     }
 
-    // Cria todo o painel Admin só depois do login
     function renderAdmin() {
       const container = document.getElementById("mainContainer");
       container.innerHTML = `
         <div id="adminContent">
 
+          <!-- 1. Alvos / Progresso -->
           <section class="form-section admin-section">
             <h3>Alvos / Progresso</h3>
             <div class="form-group">
@@ -128,6 +164,42 @@
             <button class="btn btn-primary" onclick="salvarAlvos()">Salvar Alvos</button>
           </section>
 
+          <!-- 2. Ranking Completo -->
+          <section class="form-section admin-section">
+            <h3>Ranking Completo</h3>
+            <ul class="ranking-list" id="rankingAdmin"></ul>
+          </section>
+
+          <!-- 3. Registros de Oração (com filtro + paginação) -->
+          <section class="form-section admin-section">
+            <h3>Registros de Oração</h3>
+            <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.75rem;text-align:center;">
+              Use o lápis para editar os minutos ou a lixeira para excluir.
+            </p>
+
+            <div class="filtro-box">
+              <input type="text" id="filtroNome" placeholder="Filtrar por nome do membro..." oninput="aplicarFiltro()">
+            </div>
+
+            <div class="table-responsive">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Nome</th>
+                    <th>Data</th>
+                    <th>Dia</th>
+                    <th>Min</th>
+                    <th style="width:110px;">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="tabelaRegistros"></tbody>
+              </table>
+            </div>
+
+            <div class="pagination" id="paginacao"></div>
+          </section>
+
+          <!-- 4. Membros -->
           <section class="form-section admin-section">
             <h3>
               Membros
@@ -154,38 +226,80 @@
             </div>
           </section>
 
-          <section class="form-section admin-section">
-            <h3>Registros de Oração</h3>
-            <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.75rem;text-align:center;">
-              Use o lápis para editar os minutos ou a lixeira para excluir.
-            </p>
-            <div class="table-responsive">
-              <table class="admin-table">
-                <thead>
-                  <tr>
-                    <th>Nome</th>
-                    <th>Data</th>
-                    <th>Dia</th>
-                    <th>Min</th>
-                    <th style="width:110px;">Ações</th>
-                  </tr>
-                </thead>
-                <tbody id="tabelaRegistros"></tbody>
-              </table>
-            </div>
-          </section>
-
-          <section class="form-section admin-section">
-            <h3>Ranking Completo</h3>
-            <ul class="ranking-list" id="rankingAdmin"></ul>
-          </section>
-
           <button class="btn btn-danger" style="width:100%;margin-top:1rem;" onclick="sair()">Sair</button>
         </div>
       `;
 
       carregarTudo();
     }
+
+    function getRegistrosFiltrados() {
+      if (!filtroNome.trim()) return todosRegistros;
+      const termo = filtroNome.trim().toLowerCase();
+      return todosRegistros.filter(r => (r.Nome || "").toLowerCase().includes(termo));
+    }
+
+    function renderRegistros() {
+      const filtrados = getRegistrosFiltrados();
+      const totalPaginas = Math.max(1, Math.ceil(filtrados.length / ITENS_POR_PAGINA));
+
+      if (paginaAtual > totalPaginas) paginaAtual = totalPaginas;
+      if (paginaAtual < 1) paginaAtual = 1;
+
+      const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA;
+      const pagina = filtrados.slice(inicio, inicio + ITENS_POR_PAGINA);
+
+      const tbody = document.getElementById("tabelaRegistros");
+      if (!tbody) return;
+
+      tbody.innerHTML = pagina.length === 0
+        ? '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);">Nenhum registro encontrado</td></tr>'
+        : pagina.map(r => `
+          <tr>
+            <td class="nome-membro">${r.Nome || ""}</td>
+            <td>${formatDateBR(r.Data)}</td>
+            <td>${r.DiaSemana || ""}</td>
+            <td>${r.Minutos || 0}</td>
+            <td>
+              <div class="action-btns">
+                <button class="btn btn-primary btn-icon" title="Editar" onclick="editarRegistro('${r.id}', '${(r.Nome||"").replace(/'/g, "\\'")}', '${r.Data}', '${r.DiaSemana}', ${r.Minutos})">✏️</button>
+                <button class="btn btn-danger btn-icon" title="Excluir" onclick="excluirRegistro('${r.id}')">🗑️</button>
+              </div>
+            </td>
+          </tr>
+        `).join("");
+
+      // Paginação
+      const pagEl = document.getElementById("paginacao");
+      if (!pagEl) return;
+
+      if (filtrados.length <= ITENS_POR_PAGINA) {
+        pagEl.innerHTML = filtrados.length > 0
+          ? `<span class="page-info">${filtrados.length} registro(s)</span>`
+          : "";
+        return;
+      }
+
+      pagEl.innerHTML = `
+        <button class="btn btn-primary" onclick="irParaPagina(1)" ${paginaAtual === 1 ? "disabled" : ""}>⏮</button>
+        <button class="btn btn-primary" onclick="irParaPagina(${paginaAtual - 1})" ${paginaAtual === 1 ? "disabled" : ""}>◀</button>
+        <span class="page-info">Página ${paginaAtual} de ${totalPaginas} (${filtrados.length} registros)</span>
+        <button class="btn btn-primary" onclick="irParaPagina(${paginaAtual + 1})" ${paginaAtual === totalPaginas ? "disabled" : ""}>▶</button>
+        <button class="btn btn-primary" onclick="irParaPagina(${totalPaginas})" ${paginaAtual === totalPaginas ? "disabled" : ""}>⏭</button>
+      `;
+    }
+
+    window.irParaPagina = function(p) {
+      paginaAtual = p;
+      renderRegistros();
+    };
+
+    window.aplicarFiltro = function() {
+      const input = document.getElementById("filtroNome");
+      filtroNome = input ? input.value : "";
+      paginaAtual = 1;
+      renderRegistros();
+    };
 
     async function carregarTudo() {
       try {
@@ -196,9 +310,28 @@
           window.FB.getRanking()
         ]);
 
+        // Alvos
         const alvos = alvosRes.alvos || {};
         document.getElementById("visitasAtual").value = alvos.VisitasAtual || 0;
         document.getElementById("batismosAtual").value = alvos.BatismosAtual || 0;
+
+        // Ranking
+        const rankingEl = document.getElementById("rankingAdmin");
+        const ranking = rankingRes.ranking || [];
+        rankingEl.innerHTML = ranking.length === 0
+          ? '<li style="color:var(--text-muted);text-align:center;">Sem dados</li>'
+          : ranking.map((r, i) => `
+            <li class="ranking-item">
+              <span class="ranking-pos">${i + 1}º</span>
+              <span class="ranking-name">${r.nome}</span>
+              <span class="ranking-hours">${r.horas} h (${r.minutos} min)</span>
+            </li>
+          `).join("");
+
+        // Registros (guarda todos e renderiza com paginação)
+        todosRegistros = registrosRes.registros || [];
+        paginaAtual = 1;
+        renderRegistros();
 
         // Membros
         const tbodyMembros = document.getElementById("listaMembros");
@@ -215,39 +348,6 @@
                 </div>
               </td>
             </tr>
-          `).join("");
-
-        // Registros
-        const tbody = document.getElementById("tabelaRegistros");
-        const registros = registrosRes.registros || [];
-        tbody.innerHTML = registros.length === 0
-          ? '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);">Nenhum registro</td></tr>'
-          : registros.map(r => `
-            <tr>
-              <td class="nome-membro">${r.Nome || ""}</td>
-              <td>${formatDateBR(r.Data)}</td>
-              <td>${r.DiaSemana || ""}</td>
-              <td>${r.Minutos || 0}</td>
-              <td>
-                <div class="action-btns">
-                  <button class="btn btn-primary btn-icon" title="Editar" onclick="editarRegistro('${r.id}', '${(r.Nome||"").replace(/'/g, "\\'")}', '${r.Data}', '${r.DiaSemana}', ${r.Minutos})">✏️</button>
-                  <button class="btn btn-danger btn-icon" title="Excluir" onclick="excluirRegistro('${r.id}')">🗑️</button>
-                </div>
-              </td>
-            </tr>
-          `).join("");
-
-        // Ranking
-        const rankingEl = document.getElementById("rankingAdmin");
-        const ranking = rankingRes.ranking || [];
-        rankingEl.innerHTML = ranking.length === 0
-          ? '<li style="color:var(--text-muted);text-align:center;">Sem dados</li>'
-          : ranking.map((r, i) => `
-            <li class="ranking-item">
-              <span class="ranking-pos">${i + 1}º</span>
-              <span class="ranking-name">${r.nome}</span>
-              <span class="ranking-hours">${r.horas} h (${r.minutos} min)</span>
-            </li>
           `).join("");
 
       } catch (err) {
