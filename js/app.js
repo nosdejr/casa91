@@ -89,12 +89,12 @@ function showAlert(elId, message, type = "success") {
 }
 
 
-/** Converte minutos totais em formato H:MM (ex: 1424 → "23:44") */
+/** Converte minutos totais em formato HhMM (ex: 203 → "3h23") */
 function formatHorasMinutos(totalMin) {
   const min = Math.max(0, Math.floor(Number(totalMin) || 0));
   const h = Math.floor(min / 60);
   const m = min % 60;
-  return h + ":" + String(m).padStart(2, "0");
+  return h + "h" + String(m).padStart(2, "0");
 }
 
 function formatDateBR(iso) {
