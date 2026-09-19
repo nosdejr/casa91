@@ -324,7 +324,7 @@
             <li class="ranking-item">
               <span class="ranking-pos">${i + 1}º</span>
               <span class="ranking-name">${r.nome}</span>
-              <span class="ranking-hours">${r.horas} h (${r.minutos} min)</span>
+              <span class="ranking-hours">${formatHorasMinutos(r.minutos)}</span>
             </li>
           `).join("");
 

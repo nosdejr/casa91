@@ -88,6 +88,15 @@ function showAlert(elId, message, type = "success") {
   }, 3000);
 }
 
+
+/** Converte minutos totais em formato H:MM (ex: 1424 → "23:44") */
+function formatHorasMinutos(totalMin) {
+  const min = Math.max(0, Math.floor(Number(totalMin) || 0));
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return h + ":" + String(m).padStart(2, "0");
+}
+
 function formatDateBR(iso) {
   if (!iso) return "";
   const [y, m, d] = iso.split("-");

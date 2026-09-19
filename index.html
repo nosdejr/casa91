@@ -56,21 +56,24 @@
         const alvos = alvosRes.alvos || {};
 
         const horasMeta = Number(alvos.HorasMeta) || 158;
-        const horasAtual = Number(alvos.HorasAtual) || 0;
+        const minutosTotais = Number(alvos.MinutosTotais) || 0;
+        const horasAtualFmt = formatHorasMinutos(minutosTotais);
         const visitasMeta = Number(alvos.VisitasMeta) || 3;
         const visitasAtual = Number(alvos.VisitasAtual) || 0;
         const batismosMeta = Number(alvos.BatismosMeta) || 3;
         const batismosAtual = Number(alvos.BatismosAtual) || 0;
 
+        // Progresso em minutos (meta em horas × 60)
+        const pctHoras = Math.min(100, Math.round((minutosTotais / (horasMeta * 60)) * 100));
         const pct = (a, m) => Math.min(100, Math.round((a / m) * 100));
         const cls = p => p >= 80 ? "" : p >= 40 ? "warning" : "danger";
 
         document.getElementById("cards").innerHTML = `
           <div class="card">
             <div class="card-title">Horas de Oração</div>
-            <div class="card-value">${horasAtual} <small style="font-size:0.9rem;font-weight:500;">/ ${horasMeta}h</small></div>
-            <div class="progress-bar"><div class="progress-fill ${cls(pct(horasAtual,horasMeta))}" style="width:${pct(horasAtual,horasMeta)}%"></div></div>
-            <div class="card-meta">${pct(horasAtual,horasMeta)}% do alvo</div>
+            <div class="card-value">${horasAtualFmt} <small style="font-size:0.9rem;font-weight:500;">/ ${horasMeta}h</small></div>
+            <div class="progress-bar"><div class="progress-fill ${cls(pctHoras)}" style="width:${pctHoras}%"></div></div>
+            <div class="card-meta">${pctHoras}% do alvo</div>
           </div>
           <div class="card">
             <div class="card-title">Visitas (Casas)</div>

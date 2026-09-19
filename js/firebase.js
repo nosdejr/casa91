@@ -102,7 +102,7 @@ export async function getAlvos() {
   const regSnap = await getDocs(collection(db, "registros"));
   let totalMin = 0;
   regSnap.forEach(d => totalMin += Number(d.data().minutos) || 0);
-  alvos.HorasAtual = Math.round((totalMin / 60) * 10) / 10;
+  alvos.MinutosTotais = totalMin;
 
   return { alvos };
 }
@@ -118,8 +118,7 @@ export async function getRanking() {
   const ranking = Object.entries(map)
     .map(([nome, min]) => ({
       nome,
-      minutos: min,
-      horas: Math.round((min / 60) * 10) / 10
+      minutos: min
     }))
     .sort((a, b) => b.minutos - a.minutos);
 
